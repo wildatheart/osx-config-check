@@ -97,6 +97,7 @@ ENDC = '\033[0m'
 
 DEBUG_PRINT = False
 
+
 def _main():
     args = get_args()
     dprint(args)
@@ -142,6 +143,7 @@ def _main():
     else:
         raise ValueError("Invalid sub-command.")
 
+
 def normalize(obj):
     """Recursively normalizes `unicode` data into utf-8 encoded `str`.
 
@@ -161,6 +163,7 @@ def normalize(obj):
         return list(normalize(item) for item in obj)
     else:
         return obj
+
 
 def write_json_field(json_obj, attribute_name, value):
     """Writes a string value to a JSON object (dict).
@@ -193,6 +196,7 @@ def write_json_field(json_obj, attribute_name, value):
         return new_json
     except KeyError as err:
         sys.exit("Error: " + re.sub('"', '', str(err)))
+
 
 def write_json_array(json_obj, attribute_name, value, child_name,
                      where_clause=None):
@@ -283,7 +287,7 @@ def _recursive_write(json_obj, attribute_name, value=None, delete_attrib=False,
             str(delete_attrib), str(child_name), str(where_clause)))
 
     if len(attrib_as_list) == 0:
-        #Recursed down to target attribute
+        # Recursed down to target attribute
         if delete_attrib:
             try:
                 del json_obj[current_attrib]
@@ -292,7 +296,7 @@ def _recursive_write(json_obj, attribute_name, value=None, delete_attrib=False,
                                 "because the presumed parent attribute is not "
                                 "an object.") % current_attrib)
         elif child_name is None:
-            #normal write operation
+            # normal write operation
             try:
                 json_obj[current_attrib] = value
             except TypeError:
@@ -300,7 +304,7 @@ def _recursive_write(json_obj, attribute_name, value=None, delete_attrib=False,
                                 "the parent attribute is already set to a "
                                 "non-object value.") % current_attrib)
         else:
-            #write-array operation
+            # write-array operation
             try:
                 iter(json_obj[current_attrib])
             except TypeError:
@@ -336,7 +340,8 @@ def _recursive_write(json_obj, attribute_name, value=None, delete_attrib=False,
                             "cannot have a sub-attribute.") % current_attrib)
         if current_attrib not in json_obj:
             json_obj[current_attrib] = dict()
-        attribute_name = '.'.join(attrib_as_list) #no period included for len 1
+        # no period included for len 1
+        attribute_name = '.'.join(attrib_as_list)
 
         json_obj[current_attrib] = _recursive_write(
             json_obj=json_obj[current_attrib], attribute_name=attribute_name,
@@ -345,6 +350,7 @@ def _recursive_write(json_obj, attribute_name, value=None, delete_attrib=False,
 
         dprint("_recursive_write: returning '%s'" % str(json_obj))
         return json_obj
+
 
 def delete_json_field(json_obj, attribute_name):
     """Deletes a value from a JSON object (dict).
@@ -361,6 +367,7 @@ def delete_json_field(json_obj, attribute_name):
         return new_json
     except KeyError:
         sys.exit("Error: '%s' attribute not found." % attribute_name)
+
 
 def get_json_field(json_obj, attribute_name, json_filename=None,
                    suppress_err_msg=False):
@@ -393,8 +400,10 @@ def get_json_field(json_obj, attribute_name, json_filename=None,
                 print("Attribute '%s' not found in preferences file%s" %
                       (attrib_name_single, error_suffix))
             raise
-        attribute_name = '.'.join(attrib_as_list) #no period included for len 1
+        # no period included for len 1
+        attribute_name = '.'.join(attrib_as_list)
     return json_obj[attribute_name]
+
 
 def _get_json(filename):
     try:
@@ -406,6 +415,7 @@ def _get_json(filename):
         sys.exit(("File '%s' does not appear to be a valid JSON file. Check "
                   "this directory for backup copies to restore to, in case "
                   "this file has become corrupted.") % filename)
+
 
 def get_args():
     """Reads command line arguments.
@@ -479,6 +489,7 @@ def get_args():
 
     return args
 
+
 def _get_value_and_handle_errors(value, type_arg):
     """See: `_get_value`"""
     try:
@@ -489,6 +500,7 @@ def _get_value_and_handle_errors(value, type_arg):
     except TypeError as err:
         print re.sub('"', '', str(err))
         print_usage()
+
 
 def _get_value(value, type_arg):
     """Returns the value cast into the appropriate Python data type.
@@ -549,10 +561,12 @@ def print_usage():
            UNDERLINE, ENDC))
     sys.exit()
 
+
 def _make_backup(filename):
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     dest = "%s%s.bak" % (filename, timestamp)
     shutil.copyfile(filename, dest)
+
 
 def dprint(data):
     """Print debug information."""

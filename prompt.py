@@ -5,6 +5,7 @@ http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 
 import sys
 
+
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
 

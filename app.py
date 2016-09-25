@@ -9,15 +9,15 @@ import re
 from subprocess import Popen, PIPE, STDOUT
 from warnings import warn
 import json
-import const #const.py
-import prompt #prompt.py
+import const  # const.py
+import prompt  # prompt.py
 
 const.DEFAULT_OUTPUT_LOCATION = "~/Documents/"
 const.DEFAULT_CONFIG_FILE = "osx-config.json"
-const.WARN_FOR_RECOMMENDED = True #TODO: command line flag
-const.WARN_FOR_EXPERIMENTAL = True #TODO: command line flag
-const.FIX_RECOMMENDED_BY_DEFAULT = True #TODO: command line flag
-const.FIX_EXPERIMENTAL_BY_DEFAULT = False #TODO: command line flag
+const.WARN_FOR_RECOMMENDED = True  # TODO: command line flag
+const.WARN_FOR_EXPERIMENTAL = True  # TODO: command line flag
+const.FIX_RECOMMENDED_BY_DEFAULT = True  # TODO: command line flag
+const.FIX_EXPERIMENTAL_BY_DEFAULT = False  # TODO: command line flag
 
 const.VERSION = "v1.0.0-alpha (pidgeotto)"
 
@@ -54,16 +54,20 @@ const.SUDO_STR = ("%s%ssudo%s" %
                   (const.COLORS['BOLD'], const.COLORS['RED'],
                    const.COLORS['ENDC']))
 
+
 def get_timestamp():
     """Genereate a current timestamp that won't break a filename."""
     timestamp_format = '%Y-%m-%d_%H-%M-%S'
-    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime(timestamp_format)
+    timestamp = datetime.datetime.fromtimestamp(
+        time.time()).strftime(timestamp_format)
     return timestamp
+
 
 const.LOG_FILE_NAME = 'osx-config-check_%s.log' % get_timestamp()
 const.LOG_FILE_LOC = const.DEFAULT_OUTPUT_LOCATION + const.LOG_FILE_NAME
 
 glob_check_num = 1
+
 
 class CheckResult(object):
     """Each test can have one of three results, informing the next step."""
@@ -71,6 +75,7 @@ class CheckResult(object):
     explicit_fail = 2
     no_pass = 3
     all_skipped = 4
+
 
 def check_result_to_str(val):
     """Convert enum to string representation"""
@@ -85,6 +90,7 @@ def check_result_to_str(val):
     else:
         raise ValueError
 
+
 class Confidence(object):
     """Likelihood that a configuration will create negative side-effects.
 
@@ -95,8 +101,10 @@ class Confidence(object):
     recommended = 2
     experimental = 3
 
+
 class ConfigCheck(object):
     """Encapsulates configuration to check in operating system."""
+
     def __init__(self, tests, description, confidence, fix=None, sudo_fix=None,
                  manual_fix=None):
         """
@@ -110,8 +118,8 @@ class ConfigCheck(object):
                     * command_pass (Optional[str])
                     * command_fail (Optional[str])
                     * case_sensitive (bool)
-            description (str): A human-readable description of the configuration
-                being checked.
+            description (str): A human-readable description of the 
+                configuration being checked.
             confidence (str): "required", "recommended", or "experimental"
             fix (Optional[str]): The command to run if the configuration fails
                 the check.
@@ -142,10 +150,10 @@ class ConfigCheck(object):
         else:
             raise ValueError
 
-        #Optional args
-        self.fix = fix #default: None
-        self.sudo_fix = sudo_fix #default: None
-        self.manual_fix = manual_fix #default: None
+        # Optional args
+        self.fix = fix  # default: None
+        self.sudo_fix = sudo_fix  # default: None
+        self.manual_fix = manual_fix  # default: None
 
     def __str__(self):
         return str(self.__dict__)
@@ -153,10 +161,12 @@ class ConfigCheck(object):
     def __repr__(self):
         return self.__str__()
 
+
 def get_output_filename():
     """Get the filename of the file to write results to."""
     return (const.DEFAULT_OUTPUT_LOCATION + "config-check_" +
             time.strftime("%Y%m%d%H%M%S") + ".txt")
+
 
 def read_config(config_filename):
     """Read the expected system configuration from the config file."""
@@ -171,21 +181,21 @@ def read_config(config_filename):
         if '_comment' in config_check:
             continue
 
-        #Config MUST specify a description of the check
+        # Config MUST specify a description of the check
         description = config_check['description']
         dprint("Description: %s" % description)
 
-        #Config MUST indicate the confidence of the configuration check
+        # Config MUST indicate the confidence of the configuration check
         confidence = config_check['confidence']
 
-        #Config MUST include at least one test obj
+        # Config MUST include at least one test obj
         tests = config_check['tests']
 
-        #Config MUST specify a fix object
+        # Config MUST specify a fix object
         assert 'fix' in config_check
         assert isinstance(config_check['fix'], dict)
 
-        #Fix object must specify at least one of these:
+        # Fix object must specify at least one of these:
         #command, sudo_command, manual
         assert ('command' in config_check['fix'] or
                 'sudo_command' in config_check['fix'] or
@@ -210,6 +220,7 @@ def read_config(config_filename):
         config_checks.append(config_check_obj)
 
     return config_checks
+
 
 def run_check(config_check, last_attempt=False, quiet_fail=False):
     """Perform the specified configuration check against the OS.
@@ -240,10 +251,10 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
     """
     assert isinstance(config_check, ConfigCheck)
 
-    #Assume all tests have been skipped until demonstrated otherwise.
+    # Assume all tests have been skipped until demonstrated otherwise.
     result = CheckResult.all_skipped
     for test in config_check.tests:
-        #alert user if he might get prompted for admin privs due to sudo use
+        # alert user if he might get prompted for admin privs due to sudo use
         if 'sudo ' in test['command']:
             if const.SKIP_SUDO_TESTS:
                 dprint("Skipping test because app skipping sudo tests.")
@@ -295,6 +306,7 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
 
     return result
 
+
 def log_to_file(string):
     """Append string, followed by newline character, to log file.
 
@@ -308,15 +320,16 @@ def log_to_file(string):
     with open(log_file_loc, 'a+') as log_file:
         log_file.write("%s\n" % string)
 
+
 def _execute_check(command, comparison_type, case_sensitive, command_pass=None,
                    command_fail=None):
     """Helper function for `run_check` -- executes command and checks result.
 
     This check can result in three conditions:
-    1. The check explicitly passed, and no subsequent tests need to be performed
-        for this check. Returns True.
-    2. The check explicitly failed, and no subsequent tests need to be performed
-        for this check. Raises ConfigCheckFailedExplicitly.
+    1. The check explicitly passed, and no subsequent tests need to be 
+        performed for this check. Returns True.
+    2. The check explicitly failed, and no subsequent tests need to be 
+        performed for this check. Raises ConfigCheckFailedExplicitly.
     3. The check produced another result, and if there is another test
         available, it
 
@@ -333,13 +346,13 @@ def _execute_check(command, comparison_type, case_sensitive, command_pass=None,
             depending on `comparison_type`.
 
     Returns:
-       `CheckResult`: explicit pass, explicit failure, or lacking of passing for
-            this test only.
+       `CheckResult`: explicit pass, explicit failure, or lacking of passing 
+            for this test only.
 
     Raises:
         ValueError if `comparison_type` is not an expected value
     """
-    #http://stackoverflow.com/questions/7129107/python-how-to-suppress-the-output-of-os-system
+    # http://stackoverflow.com/questions/7129107/python-how-to-suppress-the-output-of-os-system
     command = "source %s ; %s" % (const.API_FILENAME, command)
     process = Popen(command, stdout=PIPE, stderr=STDOUT, shell=True)
     stdout, _ = process.communicate()
@@ -381,6 +394,7 @@ def _execute_check(command, comparison_type, case_sensitive, command_pass=None,
     else:
         raise ValueError
 
+
 def do_warn(config_check):
     """Determines whether the config failure merits warning."""
     if config_check.confidence == Confidence.required:
@@ -392,6 +406,7 @@ def do_warn(config_check):
             const.WARN_FOR_EXPERIMENTAL):
         return True
     return False
+
 
 def _try_fix(config_check, use_sudo=False):
     """Attempt to fix a misconfiguration.
@@ -417,6 +432,7 @@ def _try_fix(config_check, use_sudo=False):
     dprint("Command executed: '%s'" % str(command))
     dprint("Command STDOUT: '%s'" % str(stdoutdata))
     dprint("Command STDERR: '%s'" % str(stderrdata))
+
 
 def do_fix_and_test(config_check):
     """Attempt to fix misconfiguration, returning the result.
@@ -451,6 +467,7 @@ def do_fix_and_test(config_check):
     else:
         return False
 
+
 def dprint_settings():
     """Prints current global flags when debug printing is enabled."""
     dprint("ENABLE_DEBUG_PRINT: %s" % str(const.ENABLE_DEBUG_PRINT))
@@ -458,6 +475,7 @@ def dprint_settings():
     dprint("PROMPT_FOR_FIXES: %s" % str(const.PROMPT_FOR_FIXES))
     dprint("ATTEMPT_FIXES: %s" % str(const.ATTEMPT_FIXES))
     dprint("SKIP_SUDO_TESTS: %s" % str(const.SKIP_SUDO_TESTS))
+
 
 def main():
     """Main function."""
@@ -484,14 +502,14 @@ def main():
                 continue
 
             if config_check.fix is None and config_check.sudo_fix is None:
-                #no automatic fix available
+                # no automatic fix available
                 if config_check.manual_fix is not None:
                     completely_failed_tests.append(glob_check_num)
                 else:
                     dprint(("Could not satisfy test #%d but no manual fix "
                             "specified.") % glob_check_num)
             else:
-                #attempt fix, but prompt user first if appropriate
+                # attempt fix, but prompt user first if appropriate
                 if const.PROMPT_FOR_FIXES:
                     prompt_default = True
                     descriptor = ''
@@ -553,6 +571,7 @@ def main():
     else:
         dprint("List of completely failed tests is empty.")
 
+
 def _underline_hyperlink(string):
     """Insert underlines into hyperlinks"""
     return re.sub(
@@ -561,13 +580,16 @@ def _underline_hyperlink(string):
         string,
         flags=re.IGNORECASE)
 
+
 def _bool_to_yes_no(boolean):
     return 'yes' if boolean else 'no'
+
 
 def dprint(msg):
     """Debug print statements."""
     if const.ENABLE_DEBUG_PRINT:
         print "DEBUG: %s" % msg
+
 
 def is_match(regex, string, ignore_case=False):
     """Check if regex matches string."""
@@ -577,8 +599,9 @@ def is_match(regex, string, ignore_case=False):
 
     return re.match(regex, string, regex_flags) is not None
 
+
 def _print_banner():
-    banner = (("---------------------------------------------------------------"
+    banner = (("--------------------------------------------------------------"
                "---------------------------\n"
                "%s%sosx-config-check%s %s\n"
                "Download the latest copy of this tool at: "
@@ -587,11 +610,12 @@ def _print_banner():
                "\t* GitHub: "
                "https://github.com/kristovatlas/osx-config-check/issues \n"
                "\t* Twitter: https://twitter.com/kristovatlas \n"
-               "---------------------------------------------------------------"
+               "--------------------------------------------------------------"
                "---------------------------\n") %
               (const.COLORS['BOLD'], const.COLORS['OKBLUE'],
                const.COLORS['ENDC'], const.VERSION))
     print _underline_hyperlink(banner)
+
 
 def print_usage():
     """Prints usage for this command-line tool and exits."""
@@ -609,6 +633,7 @@ def print_usage():
           "privileges.\n"
           "\t--help -h            Print this usage information.\n")
     sys.exit()
+
 
 def get_sys_args():
     """Parses command line args, setting defaults where not specified.
@@ -645,6 +670,7 @@ def get_sys_args():
             print_usage()
 
     return args
+
 
 if __name__ == "__main__":
     main()

@@ -12,10 +12,12 @@ Todos:
 
 import unittest
 import json
-from .. import chrome_defaults #chrome_defaults.py
+from .. import chrome_defaults  # chrome_defaults.py
+
 
 class SupportFunctionTest(unittest.TestCase):
     """Tests for various support functions."""
+
     def setUp(self):
         pass
 
@@ -51,6 +53,7 @@ class SupportFunctionTest(unittest.TestCase):
 #       result = chrome_defaults.normalize(sample_json)
 #       self.assertEqual(result['str'], u'\ufffdabc')
 
+
 class ReadCommandTest(unittest.TestCase):
     """Tests for the 'read' sub-command.
 
@@ -74,7 +77,8 @@ class ReadCommandTest(unittest.TestCase):
     def test_read_simple_int_val(self):
         """Read a simple int value"""
         sample_json = {'int': 42}
-        self.assertEqual(chrome_defaults.get_json_field(sample_json, 'int'), 42)
+        self.assertEqual(chrome_defaults.get_json_field(
+            sample_json, 'int'), 42)
 
     def test_read_simple_bool_val(self):
         """Read a simple bool value"""
@@ -95,6 +99,7 @@ class ReadCommandTest(unittest.TestCase):
         sample_json = dict()
         with self.assertRaises(KeyError):
             chrome_defaults.get_json_field(sample_json, "missing_attrib")
+
 
 class WriteCommandTest(unittest.TestCase):
     """Tests for the 'write' sub-command.
@@ -182,7 +187,8 @@ class WriteCommandTest(unittest.TestCase):
         self.assertEqual(
             result['level1']['level2']['level3']['level4'][1]['val'],
             2)
-        self.assertEqual(len(result['level1']['level2']['level3']['level4']), 2)
+        self.assertEqual(
+            len(result['level1']['level2']['level3']['level4']), 2)
 
     def test_write_nested_attrib_with_json_parent_not_obj_exit(self):
         """This should terminate because a parent attrib is a non-obj.
@@ -198,6 +204,7 @@ class WriteCommandTest(unittest.TestCase):
             result = chrome_defaults.write_json_field(
                 original_json, 'level1.level2.level3', json.loads(new_json_val))
 
+
 class DeleteCommandTest(unittest.TestCase):
     """Tests for the 'delete' sub-command.
 
@@ -209,6 +216,7 @@ class DeleteCommandTest(unittest.TestCase):
                            where_clause=None)
 
     """
+
     def setUp(self):
         pass
 
@@ -248,6 +256,7 @@ class DeleteCommandTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             chrome_defaults.delete_json_field(sample_json, 'int.str')
 
+
 class WriteArrayComandTest(unittest.TestCase):
     """Tests for the 'write-array' sub-command.
 
@@ -262,7 +271,7 @@ class WriteArrayComandTest(unittest.TestCase):
 
     def test_write_simple_int_to_array(self):
         """Write a simple int value to an array of objects."""
-        sample_json = {'arr': [{'key': 'val1'}, {'key':'val2'}]}
+        sample_json = {'arr': [{'key': 'val1'}, {'key': 'val2'}]}
         result = chrome_defaults._recursive_write(
             sample_json, 'arr', value='val3', delete_attrib=False,
             child_name='key', where_clause=None)
